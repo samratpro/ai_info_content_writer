@@ -71,10 +71,8 @@ class ContentWriter:
         self.title_prompt = ContentWriter.settings.title_prompt
         self.intro_prompt = ContentWriter.settings.intro_prompt
         self.h2_prompt = ContentWriter.settings.h2_prompt
-        self.product_prompt = ContentWriter.settings.product_prompt
-        self.buying_h2_prompt = ContentWriter.settings.buying_h2_prompt
-        self.buying_outline_prompt = ContentWriter.settings.buying_outline_prompt
-        self.buying_paragraph_prompt = ContentWriter.settings.buying_paragraph_prompt
+        self.outline_prompt = ContentWriter.settings.outline_prompt
+        self.paragraph_prompt = ContentWriter.settings.paragraph_prompt
         self.faq_h2 = ContentWriter.settings.faq_h2
         self.faq_question_prompt = ContentWriter.settings.faq_question_prompt
         self.faq_ans_prompt = ContentWriter.settings.faq_ans_prompt
@@ -89,101 +87,43 @@ class ContentWriter:
         return paragraph_format(
             ContentWriter.text_generator.text_render(self.intro_prompt.replace("((keyword))", self.keyword),
                                                      self.log, self.END, "Generating Intro..."))
-
-    def review_table_section(self):
-        wp_table_h2 = '<!-- wp:heading --><h2>' + ContentWriter.text_generator.text_render(
-            self.h2_prompt.replace("((keyword))", self.keyword),
-            self.log, self.END, "Generating Table Heading...").replace('"', '') + '</h2><!-- /wp:heading -->'
-        wp_table = '<table class="sb-pro-table"><thead><tr><th>Image</th><th>Product</th><th>Price</th></tr></thead><tbody>'
-        i = 1
-        for data in self.product_data:
-            if i == 4:
-                break
-            if data["data_ok"]:
-                link = data['link']
-                affiliate_link = link + '?tag=' + self.amz_tag
-                product_title = data['title']
-                img_link = data['image']
-                table_body = f'<tr><td class="sb-image"><div class="p_tag">{self.table_tag} {str(i)}</div><img src="' + img_link + '" class="p-img"></td><td class="sb-product"><div class="p_title">' + product_title + '</div></td><td class="sb-btn"><a href="' + affiliate_link + '" rel="nofollow" target="_blank">' + self.button_text + '</a></td></tr>'
-                wp_table += table_body
-                i += 1
-        wp_table += '</tbody><style>.sb-pro-table .sb-btn a { --sev-table-color : #EF651E;background:var(--sev-table-color) !important;} </style></table>'
-        return wp_table_h2 + wp_table
-
-    def product_review_section(self):
-        i = 1
-        product_review_section = ''
-        for data in self.product_data:
-            if data["data_ok"]:
-                link = data['link']
-                affiliate_link = link + '?tag=' + self.amz_tag
-                img_link = data['image']
-                product_title = data['title']
-                price = data['price']
-                description = data['description']
-                technical_data = data['technical_data']
-                review = data['review']
-                wp_h3 = '<!-- wp:heading {"level":3} --><h3>' + str(
-                    i) + '. ' + product_title + '</h3><!-- /wp:heading -->'
-                if len(img_link) > 0:
-                    wp_img = ((
-                                  '<!-- wp:image {"align":"center","sizeSlug":"large","linkDestination":"custom"} --><figure '
-                                  'class="wp-block-image aligncenter size-large"><a rel="nofollow" target="_blank" href="') +
-                              affiliate_link + '"><img src="' + img_link + '" alt=''/></a></figure><!-- /wp:image -->')
-                else:
-                    wp_img = ''
-                description = paragraph_format(ContentWriter.text_generator.text_render(
-                    self.product_prompt.replace("((keyword))", self.keyword).replace("((link))", link).replace(
-                        "((title))",
-                        product_title).replace(
-                        "((description))", description).replace("((technical_data))", technical_data).replace(
-                        "((review))",
-                        review).replace(
-                        "((price))", price),
-                    self.log,
-                    self.END, "Generating Product Review Section..."))
-                product_review_section += wp_h3 + wp_img + description
-                i += 1
-        return product_review_section
-
-    def buying_guide_section(self):
-        buying_h2 = '<!-- wp:heading --><h2>' + ContentWriter.text_generator.text_render(
-            self.buying_h2_prompt.replace("((keyword))", self.keyword), self.log,
+    def content_body_section(self):
+        h2 = '<!-- wp:heading --><h2>' + ContentWriter.text_generator.text_render(
+            self.h2_prompt.replace("((keyword))", self.keyword), self.log,
             self.END, "Generating Buying h2...").replace('"', '') + '</h2><!-- /wp:heading -->'
         i = 1
         while True:
             outline_raw = ContentWriter.text_generator.text_render(
-                self.buying_outline_prompt.replace('((keyword))', self.keyword), self.log,
+                self.outline_prompt.replace('((keyword))', self.keyword), self.log,
                 self.END, "Generating Buying Outline..")
             i += 1
             if any(keyword in outline_raw.lower() for keyword in ['<h2>', 'API-ERROR']):
                 break
         outlines = ""
-        for line in outline_raw.replace('<h2>', '---<h2>').replace('<H2>', '---<H2>').split('---'):
-            if 'h2' in line.lower() and not any(
+        for line in outline_raw.replace('<h2>', '---<h2>').replace('<H2>', '---<H2>').replace('<h3>', '---<h3>').replace('<H3>', '---<H3>').split('---'):
+            if 'h2' in line.lower() and 'h3' in line.lower() and not any(
                     keyword in line.lower() for keyword in ['introduction', 'objective', 'conclusion', 'overview']):
-                outlines += ' '.join(
-                    l if '</' in l else l.replace('-', '').strip() + '. ' for l in line.splitlines() if len(l) > 2)
+                outlines += ' '.join(l if '</' in l else l.replace('-', '').strip() + '. ' for l in line.splitlines() if len(l) > 2)
         print("Outline Generate Done...")
-        outline_body_data = ''
+        content_body_data = ''
         for heading in outlines.replace('<h2>', '---<h2>').split('---'):
             if len(heading) > 1:
                 pattern = r"\b\d+\.\d+\b|[.?#@%$&()\[\]=\\/-]"
                 heading_html_format = re.sub(pattern, "", heading.replace('</h2>', '<h2>---').split('---')[0])
-                heading_text_format = heading_html_format.replace('<h2>', '').replace('</h2>', '').strip().capitalize()
+                heading_text_format = heading_html_format.replace('<h2>', '').replace('</h2>', '').replace('<h3>', '').replace('</h3>', '').strip().capitalize()
                 try:
-                    topic_to_cover = heading.replace('</h2>', '<h2>---').split('---')[1].replace(' -', '').strip()
+                    topic_to_cover = heading.replace('</h2>', '<h2>---').replace('</h3>', '<h3>---').split('---')[1].replace(' -', '').strip()
                 except:
                     topic_to_cover = ''
                 section = paragraph_format(ContentWriter.text_generator.text_render(
-                    self.buying_paragraph_prompt.replace('((keyword))', self.keyword).replace('((heading))',
+                    self.paragraph_prompt.replace('((keyword))', self.keyword).replace('((heading))',
                                                                                               heading_text_format).replace(
                         '((topic_to_cover))', topic_to_cover),
                     self.log,
                     self.END, "Generating Buying Guide Paragraph Section..."))
-                outline_body_data += heading + section
+                content_body_data += heading + section
         print(f'Content body done...')
-        return buying_h2 + outline_body_data
+        return h2 + content_body_data
 
     def faq_section(self):
         faq_h2 = '<!-- wp:heading --><h2>' + self.faq_h2 + '</h2><!-- /wp:heading -->'
@@ -219,6 +159,6 @@ class ContentWriter:
     def generate_content(self):
         intro = self.intro_section()
         if intro != "API-ERROR":
-            return intro + self.review_table_section() + self.product_review_section() + self.buying_guide_section() + self.faq_section() + self.conclusion_section()
+            return intro + self.content_body_section() + self.faq_section() + self.conclusion_section()
         else:
             return "Content Generate Error"

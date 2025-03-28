@@ -28,7 +28,7 @@ class FeatureImageCreate:
         self.encoded_credentials = base64.b64encode(self.credentials.encode('utf-8')).decode('utf-8')
         self.headers = {"Authorization": f"Basic {self.encoded_credentials}", }
 
-    def feature_image(self, keyword, product_data, log, END):
+    def feature_image(self, keyword, log, END):
         # Create an img name Folder
         link1 = product_data[0]['image']
         link2 = product_data[1]['image']

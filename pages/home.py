@@ -10,7 +10,7 @@ import httpx
 import base64
 from task.feature_img_generator import FeatureImageCreate
 from task.content_writer import ContentWriter
-from task.amazon_scrapper import ProductDataExtractor, AmazonSERPExtractor
+from task.serp_scrapper import SerpScrap
 from task.create_category import create_category
 from models import Postdata, Session
 
@@ -19,7 +19,7 @@ class HomePage(CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.base_path = os.path.join(os.getcwd(), "appdata/amazon_data")
+        self.base_path = os.path.join(os.getcwd(), "appdata/info_data")
         if not os.path.exists(self.base_path):
             os.makedirs(self.base_path)
         self.template_path = os.path.join(self.base_path, "template")
@@ -34,7 +34,7 @@ class HomePage(CTkFrame):
         self.cookie_path = os.path.join(os.getcwd(), f"{self.base_path}/cookie.json")
 
         # main labale
-        self.label = CTkLabel(self, text="Amazon Writer Page", height=30, width=200, font=("Arial", 20))
+        self.label = CTkLabel(self, text="Info Writer Page", height=30, width=200, font=("Arial", 20))
         self.label.grid(row=0, column=0, columnspan=2, pady=10)
 
         # main scroll frame
@@ -162,9 +162,9 @@ class HomePage(CTkFrame):
             context = browser.new_context(no_viewport=True)
             page = context.new_page()
             try:
-                page.goto("https://amazon.com", timeout=120000)
+                page.goto("https://Info.com", timeout=120000)
             except Exception as e:
-                log.insert(END, f"Error navigating to amazon: {e}\n")
+                log.insert(END, f"Error navigating to Info: {e}\n")
                 log.see(END)
                 browser.close()
                 return
@@ -265,11 +265,10 @@ class HomePage(CTkFrame):
             if self.stop_check(close_event.is_set(), log):
                 break  # Stop if the close_event is triggered
             log.insert(END, f"{str(i)}. Keyword : {keyword}\n\n")
-            amazon_scrapper = AmazonSERPExtractor(keyword, log, END)
-            product_extractor = ProductDataExtractor(amazon_scrapper.search_amazon(), log, END)
-            product_data = product_extractor.extract_product_data()
+            serp = SerpScrap(keyword, log, END)
+            serp_data = serp.visit_serp()
 
-            content_writer = ContentWriter(keyword, product_data, log, END)
+            content_writer = ContentWriter(keyword, serp_data, log, END)
             title = content_writer.title_section()
             wp_content = content_writer.generate_content()
             category_id = create_category()
@@ -283,7 +282,7 @@ class HomePage(CTkFrame):
                     'status': "publish",
                     'content': wp_content,
                     'format': 'standard',
-                    'featured_media': Img.feature_image(keyword, product_data, log, END),
+                    'featured_media': Img.feature_image(keyword, log, END),
                 }
             else:
                 post_data = {
@@ -293,7 +292,7 @@ class HomePage(CTkFrame):
                     'content': wp_content,
                     'categories': [category_id],  # Ensure category_id is a list with an integer ID
                     'format': 'standard',
-                    'featured_media': Img.feature_image(keyword, product_data, log, END),
+                    'featured_media': Img.feature_image(keyword, log, END),
                 }
 
                 # Posting Request
