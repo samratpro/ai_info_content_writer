@@ -22,6 +22,7 @@ class Postdata(Base):
     title_prompt = Column(Text)
     intro_prompt = Column(Text)
     h2_prompt = Column(Text)
+    h2_brief_prompt = Column(Text)
     outline_prompt = Column(Text)
     paragraph_prompt = Column(Text)
     faq_h2 = Column(Text)

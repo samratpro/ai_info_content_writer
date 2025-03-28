@@ -29,6 +29,10 @@ The final sentence should intrigue readers to continue reading the full article.
 rules:
 1. Must be interesting
 2. Never directly place keyword"""
+        self.default_h2_brief_prompt = """Generate a concise summary (not an introduction) before the main article, around 80 words.  
+Ensure the summary includes the keyword: "<<keyword>>".  
+Avoid phrases like "In this article" or "We will explore".  
+Keep it engaging, informative, and to the point. """
         self.default_outline_prompt = """Generate an outline for a buying guide for the keyword: ((keyword)) [What to consider before purchasing a product].
 The outline consists of multiple H2 sections with key subtopics underneath.
 Instructions:
@@ -105,6 +109,7 @@ Write 5 related questions on this topic
                 title_prompt=self.default_title_prompt,
                 intro_prompt=self.default_intro_prompt,
                 h2_prompt=self.default_h2_prompt,
+                h2_brief_prompt=self.default_h2_brief_prompt,
                 outline_prompt=self.default_outline_prompt,
                 paragraph_prompt=self.default_paragraph_prompt,
                 faq_h2=self.default_faq_h2,
@@ -147,6 +152,7 @@ Write 5 related questions on this topic
             ("Title Prompt", "title_prompt_entry", "title_prompt"),
             ("Intro Prompt", "intro_prompt_entry", "intro_prompt"),
             ("H2 Prompt", "h2_prompt_entry", "h2_prompt"),
+            ("H2 Brief Prompt", "h2_brief_prompt_entry", "h2_brief_prompt"),
             ("Outline Prompt", "outline_prompt_entry", "outline_prompt"),
             ("Paragraph Prompt", "paragraph_prompt_entry", "paragraph_prompt"),
             ("FAQ H2", "faq_h2_entry", "faq_h2"),
@@ -222,6 +228,7 @@ Write 5 related questions on this topic
             Postdata.title_prompt: values["title_prompt_entry"],
             Postdata.intro_prompt: values["intro_prompt_entry"],
             Postdata.h2_prompt: values["h2_prompt_entry"],
+            Postdata.h2_brief_prompt: values["h2_brief_prompt_entry"],
             Postdata.outline_prompt: values["outline_prompt_entry"],
             Postdata.paragraph_prompt: values["paragraph_prompt_entry"],
             Postdata.faq_h2: values["faq_h2_entry"],
@@ -256,6 +263,7 @@ Write 5 related questions on this topic
                 Postdata.title_prompt: self.default_title_prompt,
                 Postdata.intro_prompt: self.default_intro_prompt,
                 Postdata.h2_prompt: self.default_h2_prompt,
+                Postdata.h2_brief_prompt: self.default_h2_brief_prompt,
                 Postdata.outline_prompt: self.default_outline_prompt,
                 Postdata.paragraph_prompt: self.default_paragraph_prompt,
                 Postdata.faq_h2: self.default_faq_h2,
@@ -310,6 +318,9 @@ Write 5 related questions on this topic
 
             self.entries['h2_prompt_entry'].delete(0, END)
             self.entries['h2_prompt_entry'].insert(0, self.default_h2_prompt)
+
+            self.entries['h2_brief_prompt_entry'].delete(0, END)
+            self.entries['h2_brief_prompt_entry'].insert(0, self.default_h2_prompt)
 
             self.entries['outline_prompt_entry'].delete(0, END)
             self.entries['outline_prompt_entry'].insert(0, self.default_outline_prompt)

@@ -71,6 +71,7 @@ class ContentWriter:
         self.title_prompt = ContentWriter.settings.title_prompt
         self.intro_prompt = ContentWriter.settings.intro_prompt
         self.h2_prompt = ContentWriter.settings.h2_prompt
+        self.h2_brief_prompt = ContentWriter.settings.h2_brief_prompt
         self.outline_prompt = ContentWriter.settings.outline_prompt
         self.paragraph_prompt = ContentWriter.settings.paragraph_prompt
         self.faq_h2 = ContentWriter.settings.faq_h2
@@ -87,10 +88,17 @@ class ContentWriter:
         return paragraph_format(
             ContentWriter.text_generator.text_render(self.intro_prompt.replace("((keyword))", self.keyword),
                                                      self.log, self.END, "Generating Intro..."))
-    def content_body_section(self):
-        h2 = '<!-- wp:heading --><h2>' + ContentWriter.text_generator.text_render(
+
+    def h2_generate(self):
+        return '<!-- wp:heading --><h2>' + ContentWriter.text_generator.text_render(
             self.h2_prompt.replace("((keyword))", self.keyword), self.log,
-            self.END, "Generating Buying h2...").replace('"', '') + '</h2><!-- /wp:heading -->'
+            self.END, "Generating Targeted h2...").replace('"', '') + '</h2><!-- /wp:heading -->'
+    def h2_brief_generate(self):
+        return paragraph_format(ContentWriter.text_generator.text_render(
+            self.h2_brief_prompt.replace("((keyword))", self.keyword), self.log,
+            self.END, "Generating h2 brief..."))
+
+    def content_body_section(self):
         i = 1
         while True:
             outline_raw = ContentWriter.text_generator.text_render(
@@ -123,7 +131,7 @@ class ContentWriter:
                     self.END, "Generating Buying Guide Paragraph Section..."))
                 content_body_data += heading + section
         print(f'Content body done...')
-        return h2 + content_body_data
+        return content_body_data
 
     def faq_section(self):
         faq_h2 = '<!-- wp:heading --><h2>' + self.faq_h2 + '</h2><!-- /wp:heading -->'
@@ -159,6 +167,6 @@ class ContentWriter:
     def generate_content(self):
         intro = self.intro_section()
         if intro != "API-ERROR":
-            return intro + self.content_body_section() + self.faq_section() + self.conclusion_section()
+            return intro + self.h2_generate() + self.h2_brief_generate() + self.content_body_section() + self.faq_section() + self.conclusion_section()
         else:
             return "Content Generate Error"
